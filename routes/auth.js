@@ -5,6 +5,7 @@ const {body,validationResult,matchedData}=require('express-validator')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const fetchuser = require('../middleware/fetchuser');
+const sending_verify_email=require("../Email/tokenSender")
 
 const JWT_SECRET='Natureisourmother';
 
@@ -31,15 +32,15 @@ router.post('/createuser',
     }
     const rdata = matchedData(req);
     console.log(rdata);
-    // try to catch error if somethin happen with db
+    // try to catch error if something happen with db
     try{
         // check whether the user with same email exists already
 
     // finding user by email
-    let user=await User.findOne({email : req.body.email});
+    let user=await User.findOne({email : rdata.email});
     if(user)
     {
-        return res.status(400).json(success,{error:"Sorry User With this Email Id Already Exists"})
+        return res.status(400).json({success,error:"Sorry User With this Email Id Already Exists"})
     }
   // creating user for storing in database
 
@@ -47,13 +48,13 @@ router.post('/createuser',
   // generating salt
   const salt=await bcrypt.genSalt(10);
    // generating hash
-  const secPass=await bcrypt.hash(req.body.password,salt);
+  const secPass=await bcrypt.hash(rdata.password,salt);
 
    user=await User.create(
     {
-        name: req.body.name,
+        name: rdata.name,
         password:secPass,
-        email:req.body.email
+        email:rdata.email
     }
    )
    const data={
@@ -61,12 +62,14 @@ router.post('/createuser',
         id:user.id
     }
    }
-const authtoken=jwt.sign(data,JWT_SECRET);
+const authtoken=jwt.sign(data,JWT_SECRET,{ expiresIn: '10m' });
+sending_verify_email(authtoken,rdata.email);
 success=true;
 
 
 // res.json({"msg":"User have been Successfull Created","user":user})
-res.json({success,authtoken});
+// res.json({success,authtoken,msg:"Verification  Email sent"});
+res.json({success,msg:"Verification  Email sent"});
     
 }
 catch(error)
@@ -81,9 +84,98 @@ catch(error)
 
 
 
+//Route 2 :Verifying User Email  using : GET "/api/auth/login" Does not require Auth No login Required
+
+router.post('/verify', fetchuser,async (req, res)=>{
+    
+   // database email_verified=true;
+   // redirect  kar dena hai token bhejna hai
+   try{
+    const userId=req.user.id;
+    
+    const user=await User.findById(userId).select("-password");
+    if(!user.email_verified)
+    {
+        
+       
+        user.email_verified=true;
+        user.save();
+
+        return  res.status(200).json({success:true,"msg":"Email Verification Successfull"})
+    }
+    else
+    {
+        return  res.status(400).json({success:false,"msg":"Email Already Verified "})
+
+    }
+    
+
+}
+catch(error)
+{
+    // printing error 
+    console.log(error.message);
+    res.status(500).send("Internal Server  Ocurred")
+
+}
+  
+});
 
 
-//Route 2 :Login User using : POST "/api/auth/login" Does not require Auth No login Required
+
+//Route 3 :Regenerating Verification  User Email  using : POST "/api/auth/send_email"    login Required
+
+router.post('/resend_email', fetchuser,async (req, res)=>{
+    
+    // database email_verified=true;
+    // redirect  kar dena hai token bhejna hai
+    try{
+     const userId=req.user.id;
+     
+     const user=await User.findById(userId).select("-password");
+     if(!user.email_verified)
+     {
+        const data={
+            user:{
+                id:user.id
+            }
+           }
+        const authtoken=jwt.sign(data,JWT_SECRET,{ expiresIn: '10m' });
+        sending_verify_email(authtoken);
+        success=true;
+        
+        
+        // res.json({"msg":"User have been Successfull Created","user":user})
+        // res.json({success,authtoken,msg:"Verification  Email sent"});
+        res.json({success,msg:"Verification  Email sent"});
+     }
+     else
+     {
+         return  res.status(400).json({success:false,"msg":"Email Already Verified "})
+ 
+     }
+     
+ 
+ }
+ catch(error)
+ {
+     // printing error 
+     console.log(error.message);
+     res.status(500).send("Internal Server  Ocurred")
+ 
+ }
+   
+ });
+
+
+
+
+
+
+
+
+
+//Route 4 :Login User using : POST "/api/auth/login" Does not require Auth No login Required
 router.post('/login',
 // validating data here
 [
@@ -101,7 +193,7 @@ router.post('/login',
     const rdata = matchedData(req);
     console.log(rdata);
 
-    const {email,password}=req.body;
+    const {email,password}=rdata;
 
     // try to catch error if somethin happen with db
     try{
@@ -121,15 +213,22 @@ router.post('/login',
   {
    return  res.status(400).json(success,{error:"Please try to login with correct credentials"});
   }
- 
+  
+    
+  
   const data={
-    user:{
+      user:{
         id:user.id
     }
-   }
-const authtoken=jwt.sign(data,JWT_SECRET);
+}
+const authtoken=jwt.sign(data,JWT_SECRET,{ expiresIn: '30m' });
 success=true;
-res.json({success,authtoken});
+if(!user.email_verified)
+  {
+
+      return  res.status(400).json({success,authtoken,"msg":"Please Verify Your Email First "})
+  }
+return res.json({success,authtoken});
     
    
 }
@@ -144,7 +243,7 @@ catch(error)
 
 
 
-//Router 3 : Get Loggedin User Details using GET "/api/auth/login/getuser" Login Required
+//Router 5 : Get Loggedin User Details using GET "/api/auth/login/getuser" Login Required
 router.get('/getuser',fetchuser,async (req,res)=>{
    
     // try to catch error if somethin happen with db
@@ -152,7 +251,13 @@ try{
     const userId=req.user.id;
     
     const user=await User.findById(userId).select("-password");
-   return  res.status(200).json({"msg":"success","userInfo":user})
+    if(!user.email_verified)
+  {
+
+      return  res.status(400).json({success:false,"msg":"Please Verify Your Email First "})
+  }
+    
+   return  res.status(200).json({success:true,"userInfo":user})
     
 
 }

@@ -27,3 +27,14 @@ const fetchuser=(req,res,next)=>{
 }
 
 module.exports=fetchuser;
+
+// jwt.verify(token, 'ourSecretKey', function(err, decoded) {
+//     if (err) {
+//         console.log(err);
+//         res.send("Email verification failed, 
+//                 possibly the link is invalid or expired");
+//     }
+//     else {
+//         res.send("Email verifified successfully");
+//     }
+// });

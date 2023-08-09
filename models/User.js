@@ -19,6 +19,10 @@ const UserSchema = new Schema({
     date:{
         type:Date,
         default: Date.now
+    },
+    email_verified:{
+        type:Boolean,
+        default: false
     }
 });
 const User=mongoose.model('user',UserSchema);

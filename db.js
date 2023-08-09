@@ -1,7 +1,7 @@
 const mongoose =require('mongoose');
 
 
-const mongoURI="mongodb://localhost:27017/test"
+const mongoURI="mongodb://localhost:27017/test1"
 
 const connectToMongo= async ()=>{
    
