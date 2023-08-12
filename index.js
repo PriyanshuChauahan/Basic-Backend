@@ -1,9 +1,14 @@
+require("dotenv").config();
 const connectToMongo=require('./db');
 const express = require('express')
 const cors = require('cors')
 
-connectToMongo();
 
+// (async function db() {
+  
+//  await  connectToMongo();
+// })();
+connectToMongo();
 
 const app = express()
 app.use(cors())

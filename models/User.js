@@ -23,6 +23,10 @@ const UserSchema = new Schema({
     email_verified:{
         type:Boolean,
         default: false
+    },
+    reset_password:{
+        type:Boolean,
+        default: false
     }
 });
 const User=mongoose.model('user',UserSchema);
