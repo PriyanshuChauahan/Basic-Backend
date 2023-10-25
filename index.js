@@ -9,15 +9,26 @@ connectToMongo();
 const port = process.env.PORT || 5000;
 
 const app = express();
-app.use(cors());
+
+app.use(cors(
+  {
+    credentials:true,
+    origin:"http://localhost:3000",
+  }
+));
+app.use(cookieParser());
 app.use(express.json());
 
-app.use(cookieParser());
+
 
 // Available Routes
 
 app.use("/api/auth", require("./routes/auth.route"));
-
+// app.use("/api/setting", async (req, res, next) => {
+//      res.cookie("yu","90877");
+//      res.send("Cookie settled")
+ 
+// });
 // for all non available routes
 app.use(async (req, res, next) => {
   // const error=new Error("Not found");

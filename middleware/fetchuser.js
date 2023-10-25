@@ -5,8 +5,15 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const fetchuser = async (req, res, next) => {
   // get the user from jwt token and aad id to req object
+  if(!req.cookies.authtoken)
+  {
+    req.cookies.authtoken=0;
+  }
+   const authtoken =req.cookies.authtoken;
+   
+  
 
-  const authtoken = req.header("auth-token");
+  // const authtoken = req.header("auth-token");
 
   // if token is not present then send error
   if (!authtoken) {

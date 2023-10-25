@@ -6,9 +6,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const passwordverifier = async (req, res, next) => {
   // get the user from jwt token and aad id to req object
 
-  const ftoken = req.header("forgot-password-token");
+  const ftoken = req.headers["forgot_password_token"];
+ 
   // if token is not present then send error
-  if (!ftoken) {
+  if (ftoken==undefined) {
     return res
       .status(401)
       .send({
@@ -24,7 +25,7 @@ const passwordverifier = async (req, res, next) => {
         .status(401)
         .send({
           success: false,
-          error: "Please authenticate using a valid  Password token",
+          error: "Please Authenticate using a valid  Password token",
         });
     }
     const token = await Token.findOne({ userId: data.user.id });
@@ -37,17 +38,17 @@ const passwordverifier = async (req, res, next) => {
       } else {
         return res
           .status(401)
-          .send({ error: "Please authenticate using a valid Email token" });
+          .send({ error: "Please Authenticate using a valid Email token" });
       }
     } else {
       return res
         .status(401)
-        .send({ error: "Please authenticate using a valid Password token" });
+        .send({ error: "Please Authenticate using a valid Password token" });
     }
   } catch (error) {
     return res
       .status(401)
-      .send({ error: "Please authenticate using a valid Password token" });
+      .send({ error: "Please Authenticate using a valid Password token" });
   }
 };
 

@@ -74,7 +74,9 @@ module.exports.create_user = async (req, res) => {
     // res.json({"msg":"User have been Successfull Created","user":user})
     // res.json({success,authtoken,msg:"Verification  Email sent"});
     res.cookie("authtoken", authtoken, { maxAge: 0.5 * 1000 * 1 * 60 * 60 });
-    return res.json({ success, msg: "Verification  Email sent" });
+    
+
+     res.json({ success, msg: "Verification  Email sent" });
   } catch (error) {
     
     res.status(500).send("Internal Server  Ocurred");
@@ -237,6 +239,8 @@ module.exports.login = async (req, res) => {
   try {
     // check whether the user with email exists or not in our db
     let success = false;
+   
+  
 
     // finding user by email
     let user = await User.findOne({ email: email });
@@ -254,7 +258,7 @@ module.exports.login = async (req, res) => {
     if (!passwordCompare) {
       return res
         .status(400)
-        .json(success, {
+        .json({success, 
           error: "Please try to login with correct credentials",
         });
     }
@@ -279,9 +283,10 @@ module.exports.login = async (req, res) => {
         .status(400)
         .json({ success, authtoken, msg: "Please Verify Your Email First " });
     }
-    return res.json({ success, authtoken });
+    return res.status(200).json({ success, authtoken });
   } catch (error) {
     // printing error
+    console.log(error);
    
     res.status(500).send("Internal Server  Ocurred");
   }

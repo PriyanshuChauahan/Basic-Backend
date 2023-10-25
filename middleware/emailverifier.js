@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const emailverifier = async (req, res, next) => {
   // get the user from jwt token and aad id to req object
 
-  const etoken = req.header("email-auth-token");
+  const etoken = req.headers["email_auth_token"];
 
   // if token is not present then send error
   console.log(etoken);
